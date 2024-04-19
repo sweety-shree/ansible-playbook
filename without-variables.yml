@@ -1,0 +1,171 @@
+---
+- hosts: localhost
+  become: yes
+  tasks:
+
+### VPC creation ###
+    - ec2_vpc_net:
+        aws_access_key: AKIARVK2XXU3HXO5Y
+        aws_secret_key: fp8yAaFYRj4tNV9oyhB4vVrPAxfFt8itKUBnXw
+        cidr_block: 10.0.0.0/16
+        name: Sushree-vpc
+        region: us-east-2
+        state: present
+      register: vpc_result
+
+### IGW creation ###
+    - ec2_vpc_igw:
+        aws_access_key: AKIARVK2XXU3HXO5YV
+        aws_secret_key: fp8yAaFYRj4tNVroyhB4vVrPAxfFt8itKUBnXw
+        vpc_id: "{{vpc_result.vpc.id }}"
+        region: us-east-2
+        state: present
+        tags:
+          Name: Sushree_igw
+      register: igw_result
+
+### VPC public Subnet creation ###
+    - ec2_vpc_subnet:
+        aws_access_key: AKIARVK2XXU3O5Y3HV
+        aws_secret_key: fp8yAaFYRjNV9groyhB4vVrPAxfFt8itKUBnXw
+        vpc_id: "{{vpc_result.vpc.id }}"
+        region: us-east-2
+        az: us-east-2a
+        state: present
+        cidr: 10.0.0.0/20
+      # enable public ip
+        map_public: yes
+        resource_tags:
+          Name: Sushree_pub
+      register: pubsubnet_result
+
+### VPC private Subnet creation ###
+    - ec2_vpc_subnet:
+        aws_access_key: AKIAR2XXU3HXO5Y3HV
+        aws_secret_key: fp8yAaF4tNV9groyhB4vVrPAxfFt8itKUBnXw
+        vpc_id: "{{vpc_result.vpc.id }}"
+        region: us-east-2
+        az: us-east-2b
+        state: present
+        cidr: 10.0.16.0/20
+      # enable public ip
+        map_public: no
+        resource_tags:
+          Name: Sushree_pvt
+      register: pvtsubnet_result
+
+### public Route Table creation ###
+    - ec2_vpc_route_table:
+        aws_access_key: AKVK2XXU3HXO5Y3HV
+        aws_secret_key: 8yAaFYRj4tNV9groyhB4vVrPAxfFt8itKUBnXw
+        vpc_id: "{{vpc_result.vpc.id }}"
+        region: us-east-2
+        state: present
+        tags:
+          Name: Sushree_pub_rt
+        subnets: [ "{{pubsubnet_result.subnet.id }}" ]
+      # create routes
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ igw_result.gateway_id }}"
+      register: public_route_table
+
+### private Route Table creation ###
+    - ec2_vpc_route_table:
+        aws_access_key: AKIARVK2XHXO5Y3HV
+        aws_secret_key: fp8yAaFj4tNV9groyhB4vVrPAxfFt8itKUBnXw
+        vpc_id: "{{vpc_result.vpc.id }}"
+        region: us-east-2
+        state: present
+        tags:
+          Name: Sushree_pvt_rt
+        subnets: [ "{{pvtsubnet_result.subnet.id }}" ]
+      # create routes
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ igw_result.gateway_id }}"
+      register: private_route_table
+
+### Security Groups creation ###
+    - ec2_group:
+        aws_access_key: AVK2XXU3HXO5Y3HV
+        aws_secret_key: fp8yAYRj4tNV9groyhB4vVrPAxfFt8itKUBnXw
+        vpc_id: "{{vpc_result.vpc.id }}"
+        region: us-east-2
+        state: present
+        name: Sushree_sg
+        description: allow
+        tags:
+          Name: Sushree_sg
+        rules:
+        - proto: all
+          cidr_ip: 0.0.0.0/0
+          rule_desc: allow all traffic
+      register: security_group_results
+
+    - name: ELB creation
+      ec2_elb_lb:
+        aws_access_key: AKIAXU3HXO5Y3HV
+        aws_secret_key: fp8yAj4tNV9groyhB4vVrPAxfFt8itKUBnXw
+        name: "Sushree-elb"
+        state: present
+        region: "us-east-2"
+        security_group_ids: ["{{ security_group_results.group_id }}"]
+        subnets: ["{{ pubsubnet_result.subnet.id }}"]
+        listeners:
+          - protocol: HTTP
+            load_balancer_port: 80
+            instance_port: 80
+
+    - name: Create Launch Configuration
+      ec2_lc:
+        aws_access_key: AKIAXXU3HXO5Y3HV
+        aws_secret_key: fp84tNV9groyhB4vVrPAxfFt8itKUBnXw
+        name: "Sushree-launch-config"
+        image_id: ami-00cda30cf72311684
+        instance_type: "t2.micro"
+        key_name: "ohio"
+        security_groups: "Sushree_sg"
+        region: "us-east-2"
+        state: present
+
+    - name: Create Auto Scaling Group
+      ec2_asg:
+        aws_access_key: AKK2XXU3HXO5Y3HV
+        aws_secret_key: fp8yAaV9groyhB4vVrPAxfFt8itKUBnXw
+        name: "Sushree-asg"
+        launch_config_name: "Sushree-launch-config"
+        min_size: 1
+        max_size: 3
+        desired_capacity: 2
+        region: "us-east-2"
+        vpc_zone_identifier: ["{{ pubsubnet_result.subnet.id }}"]
+        tags:
+          - key: Name
+            value: Sushree-asg
+            propagate_at_launch: true
+
+### Launch EC2 instance creation ###
+    - ec2:
+        image: ami-image
+        instance_type: t2.micro
+        region: us-east-2
+        wait: yes
+        count: 1
+        state: "present"
+        vpc_subnet_id: "{{ pubsubnet_result.subnet.id }}"
+        assign_public_ip: yes
+        group_id: "{{ security_group_results.group_id }}"
+        aws_access_key: AKIARVKXO5Y3HV
+        aws_secret_key: fp8yAaFYRj4VrPAxfFt8itKUBnXw
+        key_name: "ohio"
+        instance_tags:
+          Name: Sushree-Ec2
+        user_data:
+          #!/bin/bash
+          sudo yum install git httpd -y
+          sudo systemctl start httpd
+          sudo systemctl enable httpd
+          sudo git clone https://github.com/sweety-shree/food.git /var/www/html/
+
+
