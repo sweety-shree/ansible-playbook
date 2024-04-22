@@ -1,3 +1,4 @@
+
 ---
 - hosts: localhost
   become: yes
@@ -141,7 +142,7 @@
       ec2_elb_lb:
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
-        name: vivek-elb
+        name: Sushree3-elb
         region: "{{ region }}"
         state: present
         subnets:
@@ -183,8 +184,10 @@
         desired_capacity: 2
         vpc_zone_identifier:
           - "{{ pubsubnet_result.subnet.id }}"
-        load_balancers: ['Sushree3-elb']
+        load_balancers: ["{{ elb_name }}"]
         tags:
           - key: ohio
             value: "{{ asg_name }}"
             propagate_at_launch: true
+
+
