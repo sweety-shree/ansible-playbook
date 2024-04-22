@@ -1,0 +1,115 @@
+
+---
+- hosts: localhost
+  become: yes
+  gather_facts: false
+  vars_files:
+    - secret.yml
+
+  tasks:
+
+# Delete Auto Scaling Group
+    - name: Delete Auto Scaling Group
+      ec2_asg:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        region: "{{ region }}"
+        name: Sushree3-asg
+        state: absent
+
+# Delete Launch Configuration
+    - name: Delete Launch Configuration
+      ec2_lc:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        region: "{{ region }}"
+        name: "{{ launch_config_name }}"
+        state: absent
+
+# Delete ELB
+    - name: Delete ELB
+      ec2_elb_lb:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        region: "{{ region }}"
+        name: Sushree3-elb
+        state: absent
+
+# Delete EC2 Instances
+    - name: Terminate EC2 Instances
+      ec2:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        region: "{{ region }}"
+        instance_ids: i-0261922035f4cd9a8
+        state: absent
+
+# Delete Security Group
+    - name: Delete Security Group
+      ec2_group:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        region: "{{ region }}"
+        name: Sushree3-sg
+        state: absent
+
+# Delete Private Route Table
+    - name: Delete VPC Private Route Table
+      ec2_vpc_route_table:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        vpc_id: vpc-061a660d09c41d780
+        region: "{{ region }}"
+        tags:
+          Name: "{{ pvtroute_table_name }}"
+        state: absent
+
+# Delete Public Route Table
+    - name: Delete VPC Public Route Table
+      ec2_vpc_route_table:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        vpc_id: vpc-061a660d09c41d780
+        region: "{{ region }}"
+        tags:
+          Name: "{{ pubroute_table_name }}"
+        state: absent
+
+# Delete Private Subnet
+    - name: Delete VPC Private Subnet
+      ec2_vpc_subnet:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        region: "{{ region }}"
+        vpc_id: vpc-061a660d09c41d780
+        cidr: "10.0.16.0/20"
+        state: absent
+
+# Delete Public Subnet
+    - name: Delete VPC Public Subnet
+      ec2_vpc_subnet:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        region: "{{ region }}"
+        vpc_id: vpc-061a660d09c41d780
+        cidr: "10.0.0.0/20"
+        state: absent
+
+# Delete Internet Gateway
+    - name: Detach and Delete Internet Gateway
+      ec2_vpc_igw:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        region: "{{ region }}"
+        vpc_id: vpc-061a660d09c41d780
+        state: absent
+
+# Delete VPC
+    - name: Delete VPC
+      ec2_vpc_net:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        region: "{{ region }}"
+        state: absent
+        vpc_id: vpc-061a660d09c41d780
+
