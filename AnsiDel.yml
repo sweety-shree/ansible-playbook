@@ -1,0 +1,111 @@
+
+---
+- hosts: localhost
+  become: yes
+  tasks:
+    ### Delete EC2 instance ###
+    - name: Delete EC2 instance
+      ec2_instance:
+        state: absent
+        instance_ids: i-0c300b7bba8093280
+        region: us-east-2
+        aws_access_key: AKIARVK2XXU3HXO5Y3
+        aws_secret_key: fp8yAaFYRj4tNV9gyhB4vVrPAxfFt8itKUBnXw
+      ignore_errors: yes
+
+    ### Delete Auto Scaling Group ###
+    - name: Delete Auto Scaling Group
+      ec2_asg:
+        state: absent
+        name: "Sushree-asg"
+        region: us-east-2
+        aws_access_key: AKIARVK2XXU3HXY3HV
+        aws_secret_key: fp8yAaFYRj4t9groyhB4vVrPAxfFt8itKUBnXw
+      ignore_errors: yes
+
+    ### Delete Launch Configuration ###
+    - name: Delete Launch Configuration
+      ec2_lc:
+        state: absent
+        name: "Sushree-launch-config"
+        region: us-east-2
+        aws_access_key: AKIARVK2XXUHXO5Y3HV
+        aws_secret_key: fp8yAaFYRjtNV9groyhB4vVrPAxfFt8itKUBnXw
+      ignore_errors: yes
+
+    ### Delete ELB ###
+    - name: Delete ELB
+      ec2_elb_lb:
+        state: absent
+        name: "Sushree-elb"
+        region: "us-east-2"
+        aws_access_key: AKIARVK2U3HXO5Y3HV
+        aws_secret_key: fp8yAaRj4tNV9groyhB4vVrPAxfFt8itKUBnXw
+      ignore_errors: yes
+
+    ### Delete Security Groups ###
+    - name: Delete Security Groups
+      ec2_group:
+        state: absent
+        name: "Sushree_sg"
+        region: us-east-2
+        aws_access_key: AKIAK2XXU3HXO5Y3HV
+        aws_secret_key: fpAaFYRj4tNV9groyhB4vVrPAxfFt8itKUBnXw
+      ignore_errors: yes
+
+    ### Delete Route Tables ###
+    - name: Delete Public Route Table
+      ec2_vpc_route_table:
+        state: absent
+        vpc_id: vpc-07bd032e6513b64d5
+        region: us-east-2
+        aws_access_key: AKIARVK2XXU3H5Y3HV
+        aws_secret_key: fp8yAaFYRj4V9groyhB4vVrPAxfFt8itKUBnXw
+
+    - name: Delete Private Route Table
+      ec2_vpc_route_table:
+        state: absent
+        vpc_id: vpc-07bd032e6513b64d5
+        region: us-east-2
+        aws_access_key: AKIARVK2X3HXO5Y3HV
+        aws_secret_key: fp8yAaFj4tNV9groyhB4vVrPAxfFt8itKUBnXw
+
+    ### Delete Subnets ###
+    - name: Delete Public Subnet
+      ec2_vpc_subnet:
+        state: absent
+        cidr: "10.0.0.0/20"
+        vpc_id: vpc-07bd032e6513b64d5
+        region: us-east-2
+        aws_access_key: AKIAR2XXU3HXO5Y3HV
+        aws_secret_key: fp8aFYRj4tNV9groyhB4vVrPAxfFt8itKUBnXw
+
+    - name: Delete Private Subnet
+      ec2_vpc_subnet:
+        state: absent
+        cidr: "10.0.16.0/20"
+        vpc_id: vpc-07bd032e6513b64d5
+        region: us-east-2
+        aws_access_key: AKIARVK2U3HXO5Y3HV
+        aws_secret_key: fp8yAaRj4tNV9groyhB4vVrPAxfFt8itKUBnXw
+
+    ### Delete IGW ###
+    - name: Detach and delete Internet Gateway
+      ec2_vpc_igw:
+        state: absent
+        vpc_id: vpc-07bd032e6513b64d5
+        region: us-east-2
+        aws_access_key: AKIAK2XXU3HXO5Y3HV
+        aws_secret_key: fpAaFYRj4tNV9groyhB4vVrPAxfFt8itKUBnXw
+
+    ### Delete VPC ###
+    - name: Delete VPC
+      ec2_vpc_net:
+        state: absent
+        cidr: 10.0.0.0/16
+        region: us-east-2
+        aws_access_key: AKIARVXXU3HXO5Y3HV
+        aws_secret_key: fp8yAaFY4tNV9groyhB4vVrPAxfFt8itKUBnXw
+        name: Sushree_vpc
+        vpc_id: vpc-07bd032e6513b64d5
+ 
